@@ -1,7 +1,7 @@
 import { ethers } from "hardhat";
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { UCDToken__factory, UCToken, TollBridge__factory, TollBridge } from "../typechain";
+import { UCToken__factory, UCToken, TollBridge__factory, TollBridge } from "../typechain";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { TollBridgeInterface } from "../typechain/TollBridge";
 
@@ -35,7 +35,7 @@ describe("TollBridge", () => {
 
     [axel, ben, chantal] = await ethers.getSigners();
 
-    const tokenFactory = (await ethers.getContractFactory("UCToken", chantal)) as UCDToken__factory;
+    const tokenFactory = (await ethers.getContractFactory("UCToken", chantal)) as UCToken__factory;
 
     token = await tokenFactory.deploy();
     await token.deployed();
@@ -59,7 +59,7 @@ describe("TollBridge", () => {
     let revoker: SignerWithAddress;
 
     beforeEach(async () => {
-      
+
       revoker = chantal
 
       await setTime(saleStarts);

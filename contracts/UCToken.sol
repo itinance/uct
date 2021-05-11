@@ -124,6 +124,10 @@ contract UCToken is
         _locks[beneficiary] = releaseTime;
     }
 
+    function getTimeStamp() public view returns (uint256) {
+      return block.timestamp;
+    }
+
     function getLock(address beneficiary) public view returns (uint256) {
       return _locks[beneficiary];
     }
