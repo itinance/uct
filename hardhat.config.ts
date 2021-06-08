@@ -28,10 +28,10 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {},
     localhost: {},
-    mainnet: {
+    /*mainnet: {
       url: `https://rinkeby.infura.io/v3/${INFURA_API_KEY}`,
       accounts: [PRIVATE_KEY_MAINNET],
-    },
+    },*/
     rinkeby: {
       url: `https://rinkeby.infura.io/v3/${INFURA_API_KEY}`,
       accounts: [PRIVATE_KEY_RINKEBY],

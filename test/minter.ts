@@ -1,7 +1,7 @@
 import { ethers } from "hardhat";
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { UCDToken__factory, UCToken } from "../typechain";
+import { UCToken__factory, UCToken } from "../typechain";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 chai.use(chaiAsPromised);
@@ -28,7 +28,7 @@ describe("TokenMinting", () => {
     const tokenFactory = (await ethers.getContractFactory(
       "UCToken",
       deployer
-    )) as UCDToken__factory;
+    )) as UCToken__factory;
 
     token = await tokenFactory.connect(deployer).deploy();
     await token.deployed();

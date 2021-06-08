@@ -1,13 +1,11 @@
 import { ethers } from "hardhat";
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { UCDToken__factory, UCToken } from "../typechain";
+import { UCToken__factory, UCToken } from "../typechain";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 chai.use(chaiAsPromised);
 const { expect } = chai;
-
-console.log("------------------- TOKEN")
 
 describe("Token", () => {
   let token: UCToken,
@@ -24,7 +22,7 @@ describe("Token", () => {
     ben = signers[1];
     chantal = signers[2];
 
-    const tokenFactory = (await ethers.getContractFactory("UCToken", chantal)) as UCDToken__factory;
+    const tokenFactory = (await ethers.getContractFactory("UCToken", chantal)) as UCToken__factory;
 
     token = await tokenFactory.deploy();
     await token.deployed();

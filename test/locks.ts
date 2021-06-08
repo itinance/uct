@@ -1,7 +1,7 @@
 import { ethers } from "hardhat";
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { UCDToken__factory, UCToken } from "../typechain";
+import { UCToken__factory, UCToken } from "../typechain";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 chai.use(chaiAsPromised);
@@ -39,7 +39,7 @@ describe("TokenLocks", () => {
     const tokenFactory = (await ethers.getContractFactory(
       "UCToken",
       deployer
-    )) as UCDToken__factory;
+    )) as UCToken__factory;
 
     token = await tokenFactory.connect(deployer).deploy();
     await token.deployed();
@@ -57,8 +57,8 @@ describe("TokenLocks", () => {
 
   describe("setup minting role", async () => {
     let minterRole: string;
-    const 
-      lockDelta = 86400,
+    const
+      lockDelta = 86400 * 2,
       releaseTime = now() + lockDelta;
 
     beforeEach(async () => {
@@ -109,10 +109,11 @@ describe("TokenLocks", () => {
       let balanceBen = await token.balanceOf(ben.address);
       expect(balanceBen).to.eq(1000);
 
-      await ethers.provider.send("evm_increaseTime", [86400]);
+      await ethers.provider.send("evm_increaseTime", [86400*2]);
       await ethers.provider.send("evm_mine", []);
 
       token.connect(ben).transfer(chantal.address, 600);
+      await ethers.provider.send("evm_mine", []);
 
       const balanceChantal = await token.balanceOf(chantal.address);
       expect(balanceChantal).to.eq(600);
