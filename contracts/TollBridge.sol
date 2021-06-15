@@ -17,6 +17,12 @@ contract TollBridge {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
+    uint256 private constant MONTH  = 2635200;
+    uint256 private constant DAY  = 86400;
+    uint256 private constant HOLD = 1095890411000000;
+    
+    
+
     event TokensReleased(uint256 amount);
  
     // mapping for all beneficiaries holding their final amount of vested token
@@ -74,23 +80,34 @@ contract TollBridge {
     }
 
     function getActivatedAmount(uint256 startDate, uint256 endDate) public pure returns (uint256) {
-        return 0;
+       require(endDate >= startDate,"Enddate must be greater than startdate");
+        uint256 months = floor((endDate - startDate)/MONTH);
+        uint256 quarters = floor(months / 3);
+        return min((quarters * 5*10**16 ),1*10**18);
     }
-
     function getBurnAmount (uint256 startDate, uint256 endDate) public pure returns (uint256) {
-        return 0;
+        require(endDate >= startDate,"Enddate must be greater than startdate");
+        uint256 days_ = floor((endDate - startDate) / DAY);
+        if(days_ >= 730){return 0;}
+        uint256 burnAmount = 8*10**17-(days_ * HOLD);
+        
+        return max(burnAmount, 0);
+        
     }
-
-    function abs(int x) private pure returns (int) {
-        return x >= 0 ? x : -x;
+    
+    function max (uint256 x, uint256 y)private pure returns(uint256){
+        return x >= y ? x : y; 
     }
-
+    function min (uint256 x, uint256 y)private pure returns(uint256){
+        return x >= y ? y : x; 
+    }
+     
     function floor(int x) private pure returns (int) {
         return int(uint(x));
     }
-
     function floor(uint x) private pure returns (uint) {
         return uint(x);
     }
+    
 
 }
