@@ -46,14 +46,7 @@ describe("TollBridge", () => {
   describe("we vest tokens", async () => {
 
     const
-      saleStarts: number = _time("January 1 2022 0:01"),
-      vestingFinished: number = _time("April 3 2024 13:01"),
-
-      period: number  = 86400 * 30.5 * 3, // 1 quarter
-      startVesting: number  = saleStarts + period, // starts 1 quarter later
-      releasesCount: number  = 24 / 3, // 24 months as quarter = 24/3 = 8
-      duration: number  = period, // 8 quarters
-      revocable = true
+      startVesting: number  = _time("April 14 2022 0:01")
       ;
 
     let revoker: SignerWithAddress;
@@ -62,54 +55,33 @@ describe("TollBridge", () => {
 
       revoker = chantal
 
-      await setTime(saleStarts);
+      await setTime(startVesting);
 
       tollBridgeFactory = (await ethers.getContractFactory("TollBridge", chantal)) as TollBridge__factory;
 
       console.log("Start Vesting: " + startVesting)
-      console.log("Duration:      " + duration)
-      console.log("Finished:      " + vestingFinished)
 
-      tollBridge = await tollBridgeFactory.deploy(token.address, axel.address, startVesting, duration, releasesCount, revocable, revoker.address);
-      await token.deployed();
+      tollBridge = await tollBridgeFactory.deploy(token.address, startVesting);
+      await tollBridge.deployed();
 
       console.log('TB Start:  ' + await tollBridge.start())
-      console.log('TB Finish: ' + await tollBridge.finish())
 
+      // put in total 10k tokens for vesting
+      await token.mint(tollBridge.address, 10000);
     })
 
     it("vesting was setup correctly", async () => {
       expect(await tollBridge.start()).to.eq(startVesting)
-      expect(await tollBridge.finish()).to.eq(vestingFinished)
+      expect(await token.balanceOf(tollBridge.address)).to.eq(10000);
 
-      expect(await tollBridge.finish()).to.eq(startVesting + period * releasesCount)
-
+      expect(await tollBridge.getTotalBalance()).to.eq(10000);
     })
 
-    it("should mint tokens to Axel successfully", async () => {
-
-      await token.mint(tollBridge.address, 1000);
-      expect(await token.balanceOf(tollBridge.address)).to.eq(1000);
-
-      expect(await tollBridge.getTotalBalance()).to.eq(1000);
-      expect(await tollBridge.getAvailableTokens()).to.eq(0);
-
-      await increaseTime(period)
-      expect(await tollBridge.getAvailableTokens()).to.eq(0);
-
-      await increaseTime(period+1)
-      expect(await tollBridge.getAvailableTokens()).to.eq( 1000 / 8 );
-
-      await increaseTime(period)
-      expect(await tollBridge.getAvailableTokens()).to.eq( 1000 / 8 * 2);
-
-      await increaseTime(period)
-      expect(await tollBridge.getAvailableTokens()).to.eq( 1000 / 8 * 3 );
-
-      /*
-            await increaseTime(startVesting + duration)
-            expect(await tollBridge.getAvailableTokens()).to.eq(1000);
-      */
+    it("vesting for Axel", async () => {
+      await tollBridge.addBeneficiary(axel.address, 5000)
+      expect(await tollBridge.getBeneficiaryAmount(axel.address)).to.eq(5000);
+      expect(await tollBridge.getBeneficiaryAmount(ben.address)).to.eq(0);
+      expect(await tollBridge.getBeneficiaryAmount(chantal.address)).to.eq(0);
     })
 
   })
