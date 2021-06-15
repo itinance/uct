@@ -10,7 +10,9 @@
   "dependencies": {
     "bootstrap-vue": "^2.21.2",
     "core-js": "^3.6.5",
+    "ethers": "^5.3.1",
     "vue": "^2.6.11",
+    "vue-async-computed": "^3.9.0",
     "vuejs-datepicker": "^1.6.2"
   },
   "devDependencies": {
