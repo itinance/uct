@@ -151,10 +151,28 @@ export default {
     this.provider = new ethers.providers.EtherscanProvider('rinkeby', process.env.ETHERSCAN_API_KEY);
     let conAddress = '0x5E255A677341985464FA7855B0CB0D88bc56b42A';
     let conAbi = [
-      {"inputs":[{"internalType":"uint256","name":"startDate","type":"uint256"},{"internalType":"uint256","name":"endDate","type":"uint256"}],
-        "name":"getActivatedAmount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"pure","type":"function"},
-      {"inputs":[{"internalType":"uint256","name":"startDate","type":"uint256"},{"internalType":"uint256","name":"endDate","type":"uint256"}],
-        "name":"getBurnAmount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"pure","type":"function"}
+      {"inputs":[
+          {"internalType":"uint256","name":"startDate","type":"uint256"},
+          {"internalType":"uint256","name":"endDate","type":"uint256"}
+        ],
+        "name":"getActivatedAmount",
+        "outputs":[
+            {"internalType":"uint256","name":"","type":"uint256"}
+        ],
+        "stateMutability":"pure",
+        "type":"function"
+      },
+      {"inputs":[
+          {"internalType":"uint256","name":"startDate","type":"uint256"},
+          {"internalType":"uint256","name":"endDate","type":"uint256"}
+        ],
+        "name":"getBurnAmount",
+        "outputs":[
+            {"internalType":"uint256","name":"","type":"uint256"}
+        ],
+        "stateMutability":"pure",
+        "type":"function"
+      }
     ]
     this.contract = new ethers.Contract(conAddress, conAbi, this.provider);
   }
