@@ -86,15 +86,15 @@ contract TollBridge {
         uint256 currentBalance = _token.balanceOf(beneficiary);
 
         //needs an endDate
-        require((amountTotal-currentBalance) + amount <= getActivatedAmount(start(),0,amountTotal), "There are not enough available tokens at this point");
+        require((amountTotal-currentBalance) + amount <= getActivatedAmount(start(), block.time ,amountTotal), "There are not enough available tokens at this point");
 
         //require(amount > 0, "There are no tokens left for beneficiary in this contract");
 
         // playing with test values
 
         //need an endDate
-        _token.transfer(beneficiary, getReleasableAmount(start(), 0, amount));
-        _token.burn(getBurnAmount(start(), 0, amount));
+        _token.transfer(beneficiary, getReleasableAmount(start(), block.time, amount));
+        _token.burn(getBurnAmount(start(), block.time, amount));
     }
 
     function getActivatedPercent(uint256 startDate, uint256 endDate) public pure returns (uint256) {
