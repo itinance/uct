@@ -83,13 +83,16 @@ contract TollBridge {
     function release(uint256 amount) public {
         address beneficiary = msg.sender;
         uint256 amountTotal = _beneficiaries[msg.sender];
-        uint256 currentBalance = _token.balanceOf(beneficiary);
 
-        //needs an endDate
-        require((amountTotal-currentBalance) + amount <= getActivatedAmount(start(), block.timestamp, amountTotal), "There are not enough available tokens at this point");
+        //alreadyReleased needs to be the amount of tokens already released from vesting to the beneficiary
+        uint256 alreadyReleased = 0;
+
+
+        require(alreadyReleased + amount <= getActivatedAmount(start(), block.timestamp, amountTotal), "There are not enough available tokens at this point");
 
         _token.transfer(beneficiary, getReleasableAmount(start(), block.timestamp, amount));
         _token.burn(getBurnAmount(start(), block.timestamp, amount));
+        //need to also update source for alreadyReleased by adding amount
     }
 
     function getActivatedPercent(uint256 startDate, uint256 endDate) public pure returns (uint256) {
