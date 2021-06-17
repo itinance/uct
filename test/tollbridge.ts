@@ -19,6 +19,13 @@ describe("TollBridge", () => {
     tollBridge: TollBridge;
 
 
+    const
+      genesisTime: number = _time("April 14 2022 0:00"),
+      startVesting: number  = _time("April 15 2022 0:00")
+      ;
+
+
+
   const increaseTime = async (delta: number) => {
     await ethers.provider.send("evm_increaseTime", [delta]);
     await ethers.provider.send("evm_mine", []);
@@ -32,6 +39,8 @@ describe("TollBridge", () => {
 
   beforeEach(async () => {
     await ethers.provider.send("hardhat_reset", []);
+    await ethers.provider.send("evm_setNextBlockTimestamp", [genesisTime]);
+    await ethers.provider.send("evm_mine", []);
 
     [axel, ben, chantal] = await ethers.getSigners();
 
@@ -45,17 +54,10 @@ describe("TollBridge", () => {
 
   describe("we vest tokens", async () => {
 
-    const
-      startVesting: number  = _time("April 14 2022 0:01")
-      ;
-
     let revoker: SignerWithAddress;
 
     beforeEach(async () => {
-
       revoker = chantal
-
-      await setTime(startVesting);
 
       tollBridgeFactory = (await ethers.getContractFactory("TollBridge", chantal)) as TollBridge__factory;
 
@@ -77,11 +79,30 @@ describe("TollBridge", () => {
       expect(await tollBridge.getTotalBalance()).to.eq(10000);
     })
 
-    it("vesting for Axel", async () => {
+    it("vesting initializing", async () => {
+      const start = await tollBridge.start();
+      expect(await tollBridge.getActivatedAmount( start, start.add(1))).to.eq(0);
+      expect(await tollBridge.getBurnAmount( start, start.add(1))).to.eq('800000000000000000');
+
+      expect(await tollBridge.getActivatedAmount( start, start.add(86400*30.5*3-1))).to.eq('0');
+      expect(await tollBridge.getBurnAmount( start, start.add(86400*30.5*3))).to.eq('700273972599000000');
+      expect(await tollBridge.getBurnAmount( start, start.add(86400 * (30.5 *3 + 1)))).to.eq('699178082188000000');
+      expect(await tollBridge.getActivatedAmount( start, start.add(86400*30.5*3))).to.eq('50000000000000000');
+
+      expect(await tollBridge.getBurnAmount( start, start.add(86400*30.5*6))).to.eq('599452054787000000');
+      expect(await tollBridge.getActivatedAmount( start, start.add(86400*30.5*6))).to.eq('100000000000000000');
+
+      expect(await tollBridge.getBurnAmount( start, start.add(86400*30.5*12))).to.eq('398904109574000000');
+      expect(await tollBridge.getActivatedAmount( start, start.add(86400*30.5*12))).to.eq('200000000000000000');
+    })
+
+    it("vesting initializing", async () => {
       await tollBridge.addBeneficiary(axel.address, 5000)
       expect(await tollBridge.getBeneficiaryAmount(axel.address)).to.eq(5000);
       expect(await tollBridge.getBeneficiaryAmount(ben.address)).to.eq(0);
       expect(await tollBridge.getBeneficiaryAmount(chantal.address)).to.eq(0);
+
+      const start = await tollBridge.start();
     })
 
   })

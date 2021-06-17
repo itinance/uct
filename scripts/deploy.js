@@ -15,6 +15,7 @@ async function main() {
 
   // The contract is NOT deployed yet; we must wait until it is mined
   await token.deployed();
+
   console.log("Ready.")
 }
 

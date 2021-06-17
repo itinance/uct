@@ -77,6 +77,12 @@ contract TollBridge {
      * @notice Transfers vested tokens to beneficiary.
      */
     function release(uint256 amount) public {
+        address beneficiary = msg.sender;
+        uint256 amount = _beneficiaries[msg.sender];
+
+        require(amount > 0, "There are no tokens left for beneficiary in this contract");
+
+        // _token.Burn(10);
     }
 
     function getActivatedAmount(uint256 startDate, uint256 endDate) public pure returns (uint256) {
@@ -85,14 +91,14 @@ contract TollBridge {
         uint256 quarters = floor(months / 3);
         return min((quarters * 5*10**16 ),1*10**18);
     }
+
     function getBurnAmount (uint256 startDate, uint256 endDate) public pure returns (uint256) {
         require(endDate >= startDate,"Enddate must be greater than startdate");
         uint256 days_ = floor((endDate - startDate) / DAY);
         if(days_ >= 730){return 0;}
         uint256 burnAmount = 8*10**17-(days_ * HOLD);
         
-        return max(burnAmount, 0);
-        
+        return max(burnAmount, 0);   
     }
     
     function max (uint256 x, uint256 y)private pure returns(uint256){
