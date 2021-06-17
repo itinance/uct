@@ -21,11 +21,11 @@ contract TollBridge {
     uint256 private constant MONTH  = 2635200;
     uint256 private constant DAY  = 86400;
     uint256 private constant HOLD = 1095890411000000;
-    
-    
+
+
 
     event TokensReleased(uint256 amount);
- 
+
     // mapping for all beneficiaries holding their final amount of vested token
     mapping(address => uint256) private _beneficiaries;
 
@@ -92,35 +92,53 @@ contract TollBridge {
         _token.burn(amount);
     }
 
-    function getActivatedAmount(uint256 startDate, uint256 endDate) public pure returns (uint256) {
+    function getActivatedPercent(uint256 startDate, uint256 endDate) public pure returns (uint256) {
        require(endDate >= startDate,"Enddate must be greater than startdate");
         uint256 months = floor((endDate - startDate)/MONTH);
         uint256 quarters = floor(months / 3);
+
         return min((quarters * 5*10**16 ),1*10**18);
     }
 
-    function getBurnAmount (uint256 startDate, uint256 endDate) public pure returns (uint256) {
+    function getBurnPercent (uint256 startDate, uint256 endDate) public pure returns (uint256) {
         require(endDate >= startDate,"Enddate must be greater than startdate");
         uint256 days_ = floor((endDate - startDate) / DAY);
         if(days_ >= 730){return 0;}
         uint256 burnAmount = 8*10**17-(days_ * HOLD);
-        
-        return max(burnAmount, 0);   
+
+        return max(burnAmount, 0);
     }
-    
+
+    function getActivatedAmount(uint256 startDate, uint256 endDate, uint256 amount) public pure returns (uint256) {
+        uint256 activatedAmount = (amount * getActivatedPercent(startDate,endDate)) / (10**18);
+
+        return activatedAmount;
+    }
+
+    function getBurnAmount (uint256 startDate, uint256 endDate, uint256 amount) public pure returns (uint256) {
+        uint256 burnAmount = (amount * getBurnPercent(startDate, endDate)) / (10**18);
+
+        return burnAmount;
+    }
+
+    function getReleasableAmount (uint256 startDate, uint256 endDate, uint256 amount)public pure returns (uint256) {
+        uint256 releasableAmount = (amount * (10**18 - getBurnPercent(startDate, endDate))) / (10**18);
+        return releasableAmount;
+    }
+
     function max (uint256 x, uint256 y)private pure returns(uint256){
-        return x >= y ? x : y; 
+        return x >= y ? x : y;
     }
     function min (uint256 x, uint256 y)private pure returns(uint256){
-        return x >= y ? y : x; 
+        return x >= y ? y : x;
     }
-     
+
     function floor(int x) private pure returns (int) {
         return int(uint(x));
     }
     function floor(uint x) private pure returns (uint) {
         return uint(x);
     }
-    
+
 
 }
