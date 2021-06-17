@@ -4,6 +4,7 @@ import chaiAsPromised from "chai-as-promised";
 import { UCToken__factory, UCToken, TollBridge__factory, TollBridge } from "../typechain";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { TollBridgeInterface } from "../typechain/TollBridge";
+import { DH_UNABLE_TO_CHECK_GENERATOR } from "constants";
 
 chai.use(chaiAsPromised);
 const { expect } = chai;
@@ -103,6 +104,21 @@ describe("TollBridge", () => {
       expect(await tollBridge.getBeneficiaryAmount(chantal.address)).to.eq(0);
 
       const start = await tollBridge.start();
+
+      expect(await token.balanceOf(axel.address)).to.eq(0)
+
+      const tollBridgeWithAxelAsSender = await tollBridge.connect(axel)
+
+      const totalBefore = await token.balanceOf(tollBridge.address)
+      console.log(1, totalBefore.toString())
+
+      await tollBridgeWithAxelAsSender.release(100)
+
+      const totalAfter = await token.balanceOf(tollBridge.address)
+      console.log(2, totalAfter.toString())
+
+      expect(await token.balanceOf(axel.address)).to.eq(100)
+
     })
 
   })

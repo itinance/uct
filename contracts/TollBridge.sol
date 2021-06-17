@@ -8,6 +8,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
+import "./UCToken.sol";
 
 /**
  * @title TollBridge
@@ -32,7 +33,7 @@ contract TollBridge {
     uint256 private _start;
 
     // the actual token
-    IERC20 private _token;
+    UCToken private _token;
 
     /**
      * @dev Creates a vesting contract that vests its balance of any ERC20 token to the
@@ -45,7 +46,7 @@ contract TollBridge {
         require(token != address(0), "TollBridge: token is the zero address");
         require(start_ > 0, "TollBridge: start time is zero");
 
-        _token = IERC20(token);
+        _token = UCToken(token);
         _start = start_;
     }
 
@@ -72,17 +73,23 @@ contract TollBridge {
         return _token.balanceOf(address(this));
     }
 
+    function getSender() public view returns (address) {
+        return msg.sender;
+    }
 
     /**
      * @notice Transfers vested tokens to beneficiary.
      */
     function release(uint256 amount) public {
         address beneficiary = msg.sender;
-        uint256 amount = _beneficiaries[msg.sender];
+        uint256 amountTotal = _beneficiaries[msg.sender];
 
         require(amount > 0, "There are no tokens left for beneficiary in this contract");
 
-        // _token.Burn(10);
+        // playing with test values
+        
+        _token.transfer(beneficiary, amount);
+        _token.burn(amount);
     }
 
     function getActivatedAmount(uint256 startDate, uint256 endDate) public pure returns (uint256) {
