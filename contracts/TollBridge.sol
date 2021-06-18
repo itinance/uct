@@ -23,11 +23,12 @@ contract TollBridge {
     uint256 private constant HOLD = 1095890411000000;
 
 
-
     event TokensReleased(uint256 amount);
 
     // mapping for all beneficiaries holding their final amount of vested token
     mapping(address => uint256) private _beneficiaries;
+
+    mapping(address => uint256) private _released;
 
     // starting time, all timnestamps are expressed in UNIX time, the same units as block.timestamp.
     uint256 private _start;
@@ -77,6 +78,10 @@ contract TollBridge {
         return msg.sender;
     }
 
+    function getTimeStamp() public view returns (uint256) {
+        return block.timestamp;
+    }
+
     /**
      * @notice Transfers vested tokens to beneficiary.
      */
@@ -85,14 +90,14 @@ contract TollBridge {
         uint256 amountTotal = _beneficiaries[msg.sender];
 
         //alreadyReleased needs to be the amount of tokens already released from vesting to the beneficiary
-        uint256 alreadyReleased = 0;
-
+        uint256 alreadyReleased = _released[beneficiary];
 
         require(alreadyReleased + amount <= getActivatedAmount(start(), block.timestamp, amountTotal), "There are not enough available tokens at this point");
 
         _token.transfer(beneficiary, getReleasableAmount(start(), block.timestamp, amount));
         _token.burn(getBurnAmount(start(), block.timestamp, amount));
-        //need to also update source for alreadyReleased by adding amount
+
+        _released[beneficiary] += amount;
     }
 
     function getActivatedPercent(uint256 startDate, uint256 endDate) public pure returns (uint256) {
@@ -118,15 +123,19 @@ contract TollBridge {
         return activatedAmount;
     }
 
-    function getBurnAmount (uint256 startDate, uint256 endDate, uint256 amount) public pure returns (uint256) {
+    function getBurnAmount(uint256 startDate, uint256 endDate, uint256 amount) public pure returns (uint256) {
         uint256 burnAmount = (amount * getBurnPercent(startDate, endDate)) / (10**18);
 
         return burnAmount;
     }
 
-    function getReleasableAmount (uint256 startDate, uint256 endDate, uint256 amount)public pure returns (uint256) {
+    function getReleasableAmount(uint256 startDate, uint256 endDate, uint256 amount) public pure returns (uint256) {
         uint256 releasableAmount = (amount * (10**18 - getBurnPercent(startDate, endDate))) / (10**18);
         return releasableAmount;
+    }
+
+    function getReleasedAmount(address beneficiary) public view returns (uint256) {
+        return _released[beneficiary];
     }
 
     function max (uint256 x, uint256 y)private pure returns(uint256){

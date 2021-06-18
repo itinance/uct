@@ -20,7 +20,7 @@ describe("TollBridge", () => {
 
 
     const
-      genesisTime: number = _time("April 14 2022 0:00"),
+      genesisTime: number = _time("April 15 2022 0:00"),
       startVesting: number  = _time("April 15 2022 0:00")
       ;
 
@@ -119,13 +119,24 @@ describe("TollBridge", () => {
 
       const totalBefore = await token.balanceOf(tollBridge.address)
       console.log(1, totalBefore.toString())
+      console.log((await tollBridge.getTimeStamp()).toString())
 
-      await tollBridgeWithAxelAsSender.release(100)
+      await expect(tollBridgeWithAxelAsSender.release(100)).to.be.revertedWith('There are not enough available tokens at this point')
 
       const totalAfter = await token.balanceOf(tollBridge.address)
       console.log(2, totalAfter.toString())
 
-      expect(await token.balanceOf(axel.address)).to.eq(100)
+      expect(await token.balanceOf(axel.address)).to.eq(0)
+
+      await increaseTime(86400 * 30.5 *3 + 1);
+
+      await tollBridgeWithAxelAsSender.release(100)
+      expect(await token.balanceOf(axel.address)).to.eq(29)
+
+      await expect(tollBridgeWithAxelAsSender.release(200)).to.be.revertedWith('There are not enough available tokens at this point')
+
+      await tollBridgeWithAxelAsSender.release(100)
+      expect(await token.balanceOf(axel.address)).to.eq(58)
 
     })
 
