@@ -8,7 +8,8 @@
     "clean": "npx hardhat clean",
     "compile": "npx hardhat compile",
     "test": "npx hardhat test",
-    "coverage": "npm run build && npx hardhat coverage --temp artifacts --network coverage"
+    "coverage": "npm run build && npx hardhat coverage --temp artifacts --network coverage",
+    "deploy_binance_testnet": "npx hardhat run --network binance_testnet scripts/deploy.js"
   },
   "repository": {
     "type": "git",
