@@ -3,9 +3,13 @@ dotEnvConfig();
 
 import { HardhatUserConfig } from "hardhat/types";
 
+import { task } from "hardhat/config";
+
 import "@nomiclabs/hardhat-waffle";
 import "@typechain/hardhat";
 import "@nomiclabs/hardhat-etherscan";
+
+//import ethers from 'hardhat';
 
 // TODO: reenable solidity-coverage when it works
 // import "solidity-coverage";
@@ -20,6 +24,41 @@ const PRIVATE_KEY_RINKEBY =
   process.env.PRIVATE_KEY_RINKEBY! ||
   "0xc87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3"; // well known private key
 
+
+task("accounts", "Prints the list of accounts", async (args, hre) => {
+  const accounts = await hre.ethers.getSigners();
+
+  for (const account of accounts) {
+    console.log(await account.address);
+  }
+});
+
+task("mint", "Mint Tokens")
+  .addParam("contract", "The contract's address")
+  .addParam("to", "The beneficiary's address")
+  .addParam("amount", "The amount to mint")
+  .setAction( async (args, hre) => {
+  const abi = [
+    "function mint(address to, uint256 amount) public",
+  ]
+
+  const {contract: address, to, amount} = args
+
+  const contract = await hre.ethers.getContractAt(abi, address)
+  const accounts = await hre.ethers.getSigners();
+
+  const signer = contract.connect(accounts[0])
+
+  const tx = await signer.mint(to, amount)
+  console.log(tx);
+  
+  console.log(await tx.wait())
+  //console.log(2, ethers)
+  return
+  //const tokenFactory = await ethers.getContractFactory("UCToken");
+
+  //console.log(tokenFactory)
+});
 
 const config: HardhatUserConfig = {
   defaultNetwork: "hardhat",
