@@ -5,6 +5,7 @@ import { UCToken__factory, UCToken, TollBridge__factory, TollBridge } from "../t
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import {BigNumber} from "ethers";
 
+
 chai.use(chaiAsPromised);
 const { expect } = chai;
 
@@ -17,6 +18,16 @@ describe("TollBridge", () => {
 
   let tollBridgeFactory: TollBridge__factory,
     tollBridge: TollBridge;
+
+  const readData = async () : Promise<string[]> => {
+    const fsp = require('fs').promises;
+    let rawData = await fsp.readFile('test/Burndata.csv', 'utf8');
+    let fullArray = rawData.split('\n');
+    let burnAmounts = fullArray[1].split(';');
+    burnAmounts.shift();
+    return burnAmounts;
+  }
+
 
 
     const
@@ -69,14 +80,66 @@ describe("TollBridge", () => {
       console.log('TB Start:  ' + await tollBridge.start())
 
       // put in total 10k tokens for vesting
-      await token.mint(tollBridge.address, 10000);
+      await token.mint(tollBridge.address, BigNumber.from('10000000000000000000000'));
     })
 
     it("vesting was setup correctly", async () => {
       expect(await tollBridge.start()).to.eq(startVesting)
-      expect(await token.balanceOf(tollBridge.address)).to.eq(10000);
+      expect(await token.balanceOf(tollBridge.address)).to.eq(BigNumber.from('10000000000000000000000'));
 
-      expect(await tollBridge.getTotalBalance()).to.eq(10000);
+      expect(await tollBridge.getTotalBalance()).to.eq(BigNumber.from('10000000000000000000000'));
+    })
+
+    it('testing burn values', async () => {
+      const start = await tollBridge.start();
+      const values = await readData();
+
+      for(let i = 1; i<730; i++){
+        expect(await tollBridge.getBurnPercent(start, start.add(1+86400*i))).to.eq(values[i-1]);
+      }
+      expect(await tollBridge.getBurnPercent(start, start.add(1+86400*730))).to.eq(0);
+    })
+
+    it('testing release values', async () => {
+      const start = await tollBridge.start();
+      await tollBridge.addBeneficiary(axel.address, BigNumber.from('10000000000000000000000'))
+      const tokens = BigNumber.from('10000000000000000000000');
+      let balance = BigNumber.from(0);
+
+      const tollBridgeWithAxelAsSender = await tollBridge.connect(axel);
+
+      //checking values on start date
+      expect(await tollBridge.getBeneficiaryAmount(axel.address)).to.eq('10000000000000000000000');
+      expect(await token.balanceOf(axel.address)).to.eq(0);
+      await expect(tollBridgeWithAxelAsSender.release(1)).to.be.revertedWith('There are not enough available tokens at this point')
+
+      await increaseTime(86400 * 30.5 * 3 + 1);
+
+      for(let i = 1; i<=20; i++){
+
+        //Making sure activated amount is correct
+        expect(await tollBridge.getActivatedAmount(start, start.add(86400 * 30.5 * 3 * i +1), tokens)).to.eq(BigNumber.from('500000000000000000000').mul(i));
+
+        let released = await tollBridge.getReleasableAmount(start, start.add(86400 * 30.5 * 3 * i +1), BigNumber.from('100000000000000000000'));
+
+        //incrementally releasing available amount and checking balance after
+        for(let j = 1; j<6; j++){
+          //releasing 100 tokens
+          await tollBridgeWithAxelAsSender.release(BigNumber.from('100000000000000000000'));
+
+          //balance should increase by released amount
+          balance = balance.add(released);
+
+          //check if balance is correct
+          expect(await token.balanceOf(axel.address)).to.eq(balance);
+        }
+
+        //making sure no further tokens have been released
+        await expect(tollBridgeWithAxelAsSender.release(1)).to.be.revertedWith('There are not enough available tokens at this point');
+
+        //skipping to the next quarter
+        await increaseTime(86400 * 30.5 * 3);
+      }
     })
 
     it("vesting initializing", async () => {
@@ -103,6 +166,8 @@ describe("TollBridge", () => {
 
       expect(await tollBridge.getBurnPercent( start, start.add(86400*30.5*12))).to.eq('398904109574000000');
       expect(await tollBridge.getActivatedPercent( start, start.add(86400*30.5*12))).to.eq('200000000000000000');
+
+      await readData();
     })
 
     it("vesting initializing", async () => {
