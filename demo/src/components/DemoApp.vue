@@ -1,9 +1,18 @@
 <template>
   <div class="home">
     <b-container fluid>
-      <b-row >
+      <b-row>
         <b-col cols="4" offset="2">
           <b-form-radio-group style="margin: 0 2rem 2rem 0;" v-model="selectedOption" :options="options"></b-form-radio-group>
+        </b-col>
+      </b-row>
+      <b-row>
+        <b-col cols="3">Contract:</b-col>
+        <b-col cols="4">
+          <b-input v-model="contractAddress" size="42"></b-input>
+        </b-col>
+        <b-col cols="1">
+          <b-btn @click="connectContract">Connect</b-btn>
         </b-col>
       </b-row>
       <b-row>
@@ -96,6 +105,7 @@ export default {
         {text: 'Testnet', value: 'testnet'}
       ],
       selectedOption: 'javascript',
+      contractAddress: '0x5E255A677341985464FA7855B0CB0D88bc56b42A',
       contract: null
     }
   },
@@ -145,36 +155,38 @@ export default {
     },
     convertDate(date){
       return Math.floor(date.getTime() / 1000);
+    },
+    connectContract(){
+      this.provider = new ethers.providers.EtherscanProvider('rinkeby', process.env.ETHERSCAN_API_KEY);
+      let conAbi = [
+        {"inputs":[
+            {"internalType":"uint256","name":"startDate","type":"uint256"},
+            {"internalType":"uint256","name":"endDate","type":"uint256"}
+          ],
+          "name":"getActivatedAmount",
+          "outputs":[
+            {"internalType":"uint256","name":"","type":"uint256"}
+          ],
+          "stateMutability":"pure",
+          "type":"function"
+        },
+        {"inputs":[
+            {"internalType":"uint256","name":"startDate","type":"uint256"},
+            {"internalType":"uint256","name":"endDate","type":"uint256"}
+          ],
+          "name":"getBurnAmount",
+          "outputs":[
+            {"internalType":"uint256","name":"","type":"uint256"}
+          ],
+          "stateMutability":"pure",
+          "type":"function"
+        }
+      ]
+      this.contract = new ethers.Contract(this.contractAddress, conAbi, this.provider);
     }
   },
   mounted: function() {
-    this.provider = new ethers.providers.EtherscanProvider('rinkeby', process.env.ETHERSCAN_API_KEY);
-    let conAddress = '0x5E255A677341985464FA7855B0CB0D88bc56b42A';
-    let conAbi = [
-      {"inputs":[
-          {"internalType":"uint256","name":"startDate","type":"uint256"},
-          {"internalType":"uint256","name":"endDate","type":"uint256"}
-        ],
-        "name":"getActivatedAmount",
-        "outputs":[
-            {"internalType":"uint256","name":"","type":"uint256"}
-        ],
-        "stateMutability":"pure",
-        "type":"function"
-      },
-      {"inputs":[
-          {"internalType":"uint256","name":"startDate","type":"uint256"},
-          {"internalType":"uint256","name":"endDate","type":"uint256"}
-        ],
-        "name":"getBurnAmount",
-        "outputs":[
-            {"internalType":"uint256","name":"","type":"uint256"}
-        ],
-        "stateMutability":"pure",
-        "type":"function"
-      }
-    ]
-    this.contract = new ethers.Contract(conAddress, conAbi, this.provider);
+    this.connectContract()
   }
 }
 </script>
