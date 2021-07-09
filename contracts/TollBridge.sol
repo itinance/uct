@@ -110,8 +110,12 @@ contract TollBridge {
 
     function getBurnPercent (uint256 startDate, uint256 endDate) public pure returns (uint256) {
         require(endDate >= startDate,"Enddate must be greater than startdate");
-        uint256 days_ = floor((endDate - startDate) / DAY);
-        if(days_ >= 730){return 0;}
+        
+        uint256 days_ = floor((endDate - startDate) / DAY);        
+        if(days_ >= 730) {
+            return 0;
+        }
+        
         uint256 burnAmount = 8*10**17-(days_ * HOLD);
 
         return max(burnAmount, 0);
