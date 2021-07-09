@@ -113,7 +113,7 @@ export default {
         {text: 'Testnet', value: 'testnet'}
       ],
       selectedOption: 'javascript',
-      contractAddress: '0x5E255A677341985464FA7855B0CB0D88bc56b42A',
+      contractAddress: '0x41F5095C0c06784F620e82881a48942Cf1259FB6',
       contract: null
     }
   },
@@ -130,10 +130,11 @@ export default {
     activatedAmount: {
       async get() {
         let toReturn = 0;
+        console.log('Calculating Amount')
         if(this.selectedOption === 'javascript'){
           return this.getActivatedAmount(this.startDate, this.date);
         } else if (this.selectedOption === 'testnet'){
-          let activated = Number(await this.contract.getActivatedAmount(this.convertDate(this.startDate), this.convertDate(this.date)));
+          let activated = Number(await this.contract.getActivatedPercent(this.convertDate(this.startDate), this.convertDate(this.date)));
           toReturn = activated * (10 ** -18);
         }
         return Number(toReturn);
@@ -143,10 +144,11 @@ export default {
     burnAmount: {
       async get () {
         let toReturn = 0;
+        console.log('Calculating Burn')
         if(this.selectedOption === 'javascript'){
           return this.getBurnAmount(this.startDate, this.date);
         } else if (this.selectedOption === 'testnet'){
-          let burn = Number(await this.contract.getBurnAmount(this.convertDate(this.startDate), this.convertDate(this.date)));
+          let burn = Number(await this.contract.getBurnPercent(this.convertDate(this.startDate), this.convertDate(this.date)));
           toReturn = burn * (10 ** -18);
         }
         return Number(toReturn);
@@ -173,28 +175,8 @@ export default {
     connectContract(){
       this.provider = new ethers.providers.EtherscanProvider('rinkeby', process.env.ETHERSCAN_API_KEY);
       let conAbi = [
-        {"inputs":[
-            {"internalType":"uint256","name":"startDate","type":"uint256"},
-            {"internalType":"uint256","name":"endDate","type":"uint256"}
-          ],
-          "name":"getActivatedAmount",
-          "outputs":[
-            {"internalType":"uint256","name":"","type":"uint256"}
-          ],
-          "stateMutability":"pure",
-          "type":"function"
-        },
-        {"inputs":[
-            {"internalType":"uint256","name":"startDate","type":"uint256"},
-            {"internalType":"uint256","name":"endDate","type":"uint256"}
-          ],
-          "name":"getBurnAmount",
-          "outputs":[
-            {"internalType":"uint256","name":"","type":"uint256"}
-          ],
-          "stateMutability":"pure",
-          "type":"function"
-        }
+          "function getActivatedPercent(uint256 startDate, uint256 endDate) public pure returns (uint256)",
+          "function getBurnPercent(uint256 startDate, uint256 endDate) public pure returns (uint256)"
       ]
       this.contract = new ethers.Contract(this.contractAddress, conAbi, this.provider);
     },
