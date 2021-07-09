@@ -11,9 +11,9 @@
     "bootstrap-vue": "^2.21.2",
     "core-js": "^3.6.5",
     "ethers": "^5.3.1",
+    "luxon": "^1.27.0",
     "vue": "^2.6.11",
-    "vue-async-computed": "^3.9.0",
-    "vuejs-datepicker": "^1.6.2"
+    "vue-async-computed": "^3.9.0"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~4.5.0",

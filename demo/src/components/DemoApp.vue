@@ -7,6 +7,15 @@
         </b-col>
       </b-row>
       <b-row>
+        <b-col cols="3">Start Date:</b-col>
+        <b-col cols="2">
+          <b-input v-model="tempStartDate"></b-input>
+        </b-col>
+        <b-col cols="1">
+          <b-btn @click="setStart">Set</b-btn>
+        </b-col>
+      </b-row>
+      <b-row>
         <b-col cols="3">Contract:</b-col>
         <b-col cols="4">
           <b-input v-model="contractAddress" size="42"></b-input>
@@ -27,8 +36,9 @@
         <b-col cols="3">
           Datum:
         </b-col>
-        <b-col cols="3">
-          <datepicker v-model="date" :language="de"></datepicker>
+        <b-col cols="5">
+          <b-calendar v-model="dateString"></b-calendar>
+          <b-time v-model="timeString" show-seconds></b-time>
         </b-col>
       </b-row>
       <b-row>
@@ -85,8 +95,6 @@
 </template>
 
 <script>
-import Datepicker from 'vuejs-datepicker'
-import {en, de} from 'vuejs-datepicker/dist/locale'
 import {ethers} from 'ethers'
 
 export default {
@@ -94,11 +102,11 @@ export default {
   data() {
     return {
       totalAmount: '',
-      date: new Date(),
+      dateString: new Date().toISOString().split('T')[0],
+      timeString: '00:00:00',
       startDate: new Date(2021, 3, 15),
+      tempStartDate: new Date(2021, 3, 15).getTime() / 1000,
       wantedAmount: 0,
-      en: en,
-      de: de,
       provider: null,
       options: [
         {text: 'Javascript', value: 'javascript'},
@@ -110,7 +118,13 @@ export default {
     }
   },
   components: {
-    Datepicker
+  },
+  computed: {
+    date: {
+      get () {
+        return new Date(this.dateString + 'T' + this.timeString)
+      }
+    }
   },
   asyncComputed:{
     activatedAmount: {
@@ -183,6 +197,9 @@ export default {
         }
       ]
       this.contract = new ethers.Contract(this.contractAddress, conAbi, this.provider);
+    },
+    setStart(){
+      this.startDate = new Date(Number(this.tempStartDate * 1000))
     }
   },
   mounted: function() {
