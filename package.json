@@ -9,7 +9,8 @@
     "compile": "npx hardhat compile",
     "test": "npx hardhat test",
     "coverage": "npm run build && npx hardhat coverage --temp artifacts --network coverage",
-    "deploy_binance_testnet": "npx hardhat run --network binance_testnet scripts/deploy.js"
+    "deploy_binance_testnet": "npx hardhat run --network binance_testnet scripts/deploy.js",
+    "deploy_binance_rinkeby": "npx hardhat run --network rinkeby scripts/deploy.js"
   },
   "repository": {
     "type": "git",
@@ -26,6 +27,7 @@
     "@nomiclabs/hardhat-ethers": "^2.0.2",
     "@nomiclabs/hardhat-etherscan": "^2.1.1",
     "@nomiclabs/hardhat-waffle": "^2.0.1",
+    "@nomiclabs/hardhat-web3": "^2.0.0",
     "@typechain/ethers-v5": "^6.0.5",
     "@typechain/hardhat": "^1.0.1",
     "@types/chai": "^4.2.15",
@@ -42,11 +44,13 @@
     "ts-generator": "^0.1.1",
     "ts-node": "^9.1.1",
     "typechain": "^4.0.3",
-    "typescript": "^4.2.4"
+    "typescript": "^4.2.4",
+    "web3": "^1.2.11"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.0.0",
     "dotenv": "^8.2.0"
   },
+  "postinstall":"typechain",
   "type": "module"
 }
