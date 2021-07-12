@@ -26,6 +26,7 @@ const PRIVATE_KEY_RINKEBY =
 
 
 task("accounts", "Prints the list of accounts", async (args, hre) => {
+
   const accounts = await hre.ethers.getSigners();
 
   for (const account of accounts) {
@@ -38,18 +39,36 @@ task("mint", "Mint Tokens")
   .addParam("to", "The beneficiary's address")
   .addParam("amount", "The amount to mint")
   .setAction( async (args, hre) => {
+  
+
+  const {utils, BigNumber} = hre.ethers
+    
   const abi = [
     "function mint(address to, uint256 amount) public",
+    "function decimals() public view returns (uint8)",
   ]
 
-  const {contract: address, to, amount} = args
+  
+
+  const {contract: address, test, to: beneficiary, amount} = args
 
   const contract = await hre.ethers.getContractAt(abi, address)
   const accounts = await hre.ethers.getSigners();
 
+  console.log("Contract: " + contract.address)
+  console.log("Signer: " + accounts[0].address)
+  console.log("To: " + beneficiary)
+  console.log("Amount: " + amount)
+
+  const amountWei = utils.parseEther(amount)
+  
+  const decimals = await contract.decimals()
+  console.log("Decimals: " + decimals)
+  console.log("Amount Wei: " + amountWei)
+  
   const signer = contract.connect(accounts[0])
 
-  const tx = await signer.mint(to, amount)
+  const tx = await signer.mint(beneficiary, amountWei)
   console.log(tx);
   
   console.log(await tx.wait())
@@ -103,8 +122,8 @@ const config: HardhatUserConfig = {
   etherscan: {
     // Your API key for Etherscan
     // Obtain one at https://etherscan.io/
-    //apiKey: ETHERSCAN_API_KEY,
-    apiKey: BSCSCAN_API_KEY,
+    apiKey: ETHERSCAN_API_KEY,
+    //apiKey: BSCSCAN_API_KEY,
   },
 };
 
