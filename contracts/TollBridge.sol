@@ -59,6 +59,10 @@ contract TollBridge {
         return _start;
     }
 
+    function getToken() public view returns (address) {
+        return address(_token);
+    }
+
     function addBeneficiary(address beneficiary, uint256 amount) public {
         _beneficiaries[beneficiary] += amount;
     }
@@ -87,29 +91,49 @@ contract TollBridge {
      */
     function release(uint256 amount) public {
         address beneficiary = msg.sender;
-        uint256 amountTotal = _beneficiaries[msg.sender];
+        uint256 amountTotal = _beneficiaries[beneficiary];
 
         //alreadyReleased needs to be the amount of tokens already released from vesting to the beneficiary
         uint256 alreadyReleased = _released[beneficiary];
 
-        require(alreadyReleased + amount <= getActivatedAmount(start(), block.timestamp, amountTotal), "There are not enough available tokens at this point");
+        require(alreadyReleased + amount <= getActivatedAmount(block.timestamp, amountTotal), "There are not enough available tokens at this point");
 
-        _token.transfer(beneficiary, getReleasableAmount(start(), block.timestamp, amount));
-        _token.burn(getBurnAmount(start(), block.timestamp, amount));
+        _token.transfer(beneficiary, getReleasableAmount(block.timestamp, amount));
+        _token.burn(getBurnAmount(block.timestamp, amount));
 
         _released[beneficiary] += amount;
     }
 
-    function getActivatedPercent(uint256 startDate, uint256 endDate) public pure returns (uint256) {
-       require(endDate >= startDate,"Enddate must be greater than startdate");
+    function getAvailableTokens() public view returns (uint256 available, uint256 releasableAmount, uint256 burnableAmount) {
+        address beneficiary = msg.sender;
+        uint256 amountTotal = _beneficiaries[beneficiary];
+
+        //alreadyReleased needs to be the amount of tokens already released from vesting to the beneficiary
+        uint256 alreadyReleased = _released[beneficiary];
+
+        uint256 activatedAmount = getActivatedAmount(block.timestamp, amountTotal);
+        available = activatedAmount - alreadyReleased;
+
+        releasableAmount = getReleasableAmount(block.timestamp, available);
+        burnableAmount = getBurnAmount(block.timestamp, available);
+
+        return (available, releasableAmount, burnableAmount);
+    }
+
+    function calcActivatedPercent(uint256 startDate, uint256 endDate) public pure returns (uint256) {
+        require(endDate >= startDate, "Enddate must be greater than startdate");
         uint256 months = floor((endDate - startDate)/MONTH);
         uint256 quarters = floor(months / 3);
 
         return min((quarters * 5*10**16 ),1*10**18);
     }
 
-    function getBurnPercent (uint256 startDate, uint256 endDate) public pure returns (uint256) {
-        require(endDate >= startDate,"Enddate must be greater than startdate");
+    function getActivatedPercent(uint256 endDate) public view returns (uint256) {
+        return calcActivatedPercent(start(), endDate);
+    }
+
+    function calcBurnPercent (uint256 startDate, uint256 endDate) public pure returns (uint256) {
+        require(endDate >= startDate, "Enddate must be greater than startdate");
         
         uint256 days_ = floor((endDate - startDate) / DAY);        
         if(days_ >= 730) {
@@ -121,31 +145,47 @@ contract TollBridge {
         return max(burnAmount, 0);
     }
 
-    function getActivatedAmount(uint256 startDate, uint256 endDate, uint256 amount) public pure returns (uint256) {
-        uint256 activatedAmount = (amount * getActivatedPercent(startDate,endDate)) / (10**18);
+    function getBurnPercent(uint256 endDate) public view returns (uint256) {
+        return calcBurnPercent(start(), endDate);
+    }
+
+    function calcActivatedAmount(uint256 startDate, uint256 endDate, uint256 amount) public pure returns (uint256) {
+        uint256 activatedAmount = (amount * calcActivatedPercent(startDate,endDate)) / (10**18);
 
         return activatedAmount;
     }
 
-    function getBurnAmount(uint256 startDate, uint256 endDate, uint256 amount) public pure returns (uint256) {
-        uint256 burnAmount = (amount * getBurnPercent(startDate, endDate)) / (10**18);
+    function getActivatedAmount(uint256 endDate, uint256 amount) public view returns (uint256) {
+        return calcActivatedAmount(start(), endDate, amount);
+    }
+
+    function calcBurnAmount(uint256 startDate, uint256 endDate, uint256 amount) public pure returns (uint256) {
+        uint256 burnAmount = (amount * calcBurnPercent(startDate, endDate)) / (10**18);
 
         return burnAmount;
     }
 
-    function getReleasableAmount(uint256 startDate, uint256 endDate, uint256 amount) public pure returns (uint256) {
-        uint256 releasableAmount = (amount * (10**18 - getBurnPercent(startDate, endDate))) / (10**18);
+    function getBurnAmount(uint256 endDate, uint256 amount) public view returns (uint256) {
+        return calcBurnAmount(start(), endDate, amount);
+    }
+
+    function calcReleasableAmount(uint256 startDate, uint256 endDate, uint256 amount) public pure returns (uint256) {
+        uint256 releasableAmount = (amount * (10**18 - calcBurnPercent(startDate, endDate))) / (10**18);
         return releasableAmount;
+    }
+
+    function getReleasableAmount(uint256 endDate, uint256 amount) public view returns (uint256) {
+        return calcReleasableAmount(start(), endDate, amount);
     }
 
     function getReleasedAmount(address beneficiary) public view returns (uint256) {
         return _released[beneficiary];
     }
 
-    function max (uint256 x, uint256 y)private pure returns(uint256){
+    function max (uint256 x, uint256 y) private pure returns(uint256){
         return x >= y ? x : y;
     }
-    function min (uint256 x, uint256 y)private pure returns(uint256){
+    function min (uint256 x, uint256 y) private pure returns(uint256){
         return x >= y ? y : x;
     }
 

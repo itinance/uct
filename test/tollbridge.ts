@@ -95,9 +95,9 @@ describe("TollBridge", () => {
       const values = await readData();
 
       for(let i = 1; i<730; i++){
-        expect(await tollBridge.getBurnPercent(start, start.add(1+86400*i))).to.eq(values[i-1]);
+        expect(await tollBridge.calcBurnPercent(start, start.add(1+86400*i))).to.eq(values[i-1]);
       }
-      expect(await tollBridge.getBurnPercent(start, start.add(1+86400*730))).to.eq(0);
+      expect(await tollBridge.calcBurnPercent(start, start.add(1+86400*730))).to.eq(0);
     })
 
     it('testing release values', async () => {
@@ -118,9 +118,9 @@ describe("TollBridge", () => {
       for(let i = 1; i<=20; i++){
 
         //Making sure activated amount is correct
-        expect(await tollBridge.getActivatedAmount(start, start.add(86400 * 30.5 * 3 * i +1), tokens)).to.eq(BigNumber.from('500000000000000000000').mul(i));
+        expect(await tollBridge.calcActivatedAmount(start, start.add(86400 * 30.5 * 3 * i +1), tokens)).to.eq(BigNumber.from('500000000000000000000').mul(i));
 
-        let released = await tollBridge.getReleasableAmount(start, start.add(86400 * 30.5 * 3 * i +1), BigNumber.from('100000000000000000000'));
+        let released = await tollBridge.calcReleasableAmount(start, start.add(86400 * 30.5 * 3 * i +1), BigNumber.from('100000000000000000000'));
 
         //incrementally releasing available amount and checking balance after
         for(let j = 1; j<6; j++){
@@ -145,27 +145,27 @@ describe("TollBridge", () => {
     it("vesting initializing", async () => {
       const start = await tollBridge.start();
       const tokens = BigNumber.from('20000000000000000000');
-      expect(await tollBridge.getActivatedPercent( start, start.add(1))).to.eq(0);
-      expect(await tollBridge.getBurnPercent( start, start.add(1))).to.eq('800000000000000000');
+      expect(await tollBridge.calcActivatedPercent( start, start.add(1))).to.eq(0);
+      expect(await tollBridge.calcBurnPercent( start, start.add(1))).to.eq('800000000000000000');
 
-      expect(await tollBridge.getBurnAmount(start, start.add(1), tokens)).to.eq('16000000000000000000');
-      expect(await tollBridge.getReleasableAmount(start, start.add(1), tokens)).to.eq('4000000000000000000');
-      expect(await tollBridge.getActivatedAmount(start, start.add(1), tokens)).to.eq(0);
+      expect(await tollBridge.calcBurnAmount(start, start.add(1), tokens)).to.eq('16000000000000000000');
+      expect(await tollBridge.calcReleasableAmount(start, start.add(1), tokens)).to.eq('4000000000000000000');
+      expect(await tollBridge.calcActivatedAmount(start, start.add(1), tokens)).to.eq(0);
 
-      expect(await tollBridge.getActivatedPercent( start, start.add(86400*30.5*3-1))).to.eq('0');
-      expect(await tollBridge.getBurnPercent( start, start.add(86400*30.5*3))).to.eq('700273972599000000');
-      expect(await tollBridge.getBurnPercent( start, start.add(86400 * (30.5 *3 + 1)))).to.eq('699178082188000000');
-      expect(await tollBridge.getActivatedPercent( start, start.add(86400*30.5*3))).to.eq('50000000000000000');
+      expect(await tollBridge.calcActivatedPercent( start, start.add(86400*30.5*3-1))).to.eq('0');
+      expect(await tollBridge.calcBurnPercent( start, start.add(86400*30.5*3))).to.eq('700273972599000000');
+      expect(await tollBridge.calcBurnPercent( start, start.add(86400 * (30.5 *3 + 1)))).to.eq('699178082188000000');
+      expect(await tollBridge.calcActivatedPercent( start, start.add(86400*30.5*3))).to.eq('50000000000000000');
 
-      expect(await tollBridge.getBurnAmount(start, start.add(86400*30.5*3), tokens)).to.eq('14005479451980000000');
-      expect(await tollBridge.getReleasableAmount(start, start.add(86400*30.5*3), tokens)).to.eq('5994520548020000000');
-      expect(await tollBridge.getActivatedAmount(start, start.add(86400*30.5*3), tokens)).to.eq('1000000000000000000');
+      expect(await tollBridge.calcBurnAmount(start, start.add(86400*30.5*3), tokens)).to.eq('14005479451980000000');
+      expect(await tollBridge.calcReleasableAmount(start, start.add(86400*30.5*3), tokens)).to.eq('5994520548020000000');
+      expect(await tollBridge.calcActivatedAmount(start, start.add(86400*30.5*3), tokens)).to.eq('1000000000000000000');
 
-      expect(await tollBridge.getBurnPercent( start, start.add(86400*30.5*6))).to.eq('599452054787000000');
-      expect(await tollBridge.getActivatedPercent( start, start.add(86400*30.5*6))).to.eq('100000000000000000');
+      expect(await tollBridge.calcBurnPercent( start, start.add(86400*30.5*6))).to.eq('599452054787000000');
+      expect(await tollBridge.calcActivatedPercent( start, start.add(86400*30.5*6))).to.eq('100000000000000000');
 
-      expect(await tollBridge.getBurnPercent( start, start.add(86400*30.5*12))).to.eq('398904109574000000');
-      expect(await tollBridge.getActivatedPercent( start, start.add(86400*30.5*12))).to.eq('200000000000000000');
+      expect(await tollBridge.calcBurnPercent( start, start.add(86400*30.5*12))).to.eq('398904109574000000');
+      expect(await tollBridge.calcActivatedPercent( start, start.add(86400*30.5*12))).to.eq('200000000000000000');
 
       await readData();
     })

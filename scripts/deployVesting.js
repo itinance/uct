@@ -5,7 +5,7 @@ const { ethers } = pkg;
 async function main() {
 
   const tokenFactory = await ethers.getContractFactory("TollBridge");
-  const startDate = Math.round((new Date(2021, 6, 10, 12, 0, 0)).getTime() / 1000);
+  const startDate = Math.round((new Date(2021, 6, 13, 10, 0, 0)).getTime() / 1000);
   console.log("StartDate: ", startDate)
   let tollBridge = await tokenFactory.deploy("0x2743a80ED2577935E75Ba9F150130389f9D2b111", startDate);
 

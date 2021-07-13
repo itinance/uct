@@ -132,9 +132,9 @@ export default {
         let toReturn = 0;
         console.log('Calculating Amount')
         if(this.selectedOption === 'javascript'){
-          return this.getActivatedAmount(this.startDate, this.date);
+          return this.calcActivatedAmount(this.startDate, this.date);
         } else if (this.selectedOption === 'testnet'){
-          let activated = Number(await this.contract.getActivatedPercent(this.convertDate(this.startDate), this.convertDate(this.date)));
+          let activated = Number(await this.contract.calcActivatedPercent(this.convertDate(this.startDate), this.convertDate(this.date)));
           toReturn = activated * (10 ** -18);
         }
         return Number(toReturn);
@@ -146,9 +146,9 @@ export default {
         let toReturn = 0;
         console.log('Calculating Burn')
         if(this.selectedOption === 'javascript'){
-          return this.getBurnAmount(this.startDate, this.date);
+          return this.calcBurnAmount(this.startDate, this.date);
         } else if (this.selectedOption === 'testnet'){
-          let burn = Number(await this.contract.getBurnPercent(this.convertDate(this.startDate), this.convertDate(this.date)));
+          let burn = Number(await this.contract.calcBurnPercent(this.convertDate(this.startDate), this.convertDate(this.date)));
           toReturn = burn * (10 ** -18);
         }
         return Number(toReturn);
@@ -157,13 +157,13 @@ export default {
     }
   },
   methods: {
-    getActivatedAmount(startDate, endDate) {
+    calcActivatedAmount(startDate, endDate) {
       let month = 30.5 * 24 * 60 * 60 * 1000;
       let months = Math.floor(Math.abs((endDate - startDate) / month));
       let quarters = Math.floor(months / 3);
       return Math.min((quarters * 0.05), 1)
     },
-    getBurnAmount(startDate, endDate) {
+    calcBurnAmount(startDate, endDate) {
       let day = 24 * 60 * 60 * 1000;
       let days = Math.floor(Math.abs((endDate - startDate) / day));
       let burnAmount = 0.8 - (days * (0.8 / (2 * 365)));
@@ -175,8 +175,8 @@ export default {
     connectContract(){
       this.provider = new ethers.providers.EtherscanProvider('rinkeby', process.env.ETHERSCAN_API_KEY);
       let conAbi = [
-          "function getActivatedPercent(uint256 startDate, uint256 endDate) public pure returns (uint256)",
-          "function getBurnPercent(uint256 startDate, uint256 endDate) public pure returns (uint256)"
+          "function calcActivatedPercent(uint256 startDate, uint256 endDate) public pure returns (uint256)",
+          "function calcBurnPercent(uint256 startDate, uint256 endDate) public pure returns (uint256)"
       ]
       this.contract = new ethers.Contract(this.contractAddress, conAbi, this.provider);
     },
