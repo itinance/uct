@@ -14,6 +14,9 @@
         <b-col cols="1">
           <b-btn @click="setStart">Set</b-btn>
         </b-col>
+        <b-col cols="2">
+          <b-checkbox v-model="useStartDate">Use Start Date</b-checkbox>
+        </b-col>
       </b-row>
       <b-row>
         <b-col cols="3">Contract:</b-col>
@@ -28,7 +31,7 @@
         <b-col cols="3">
           Gesamt:
         </b-col>
-        <b-col cols="3">
+        <b-col cols="1">
           <b-input v-model="totalAmount" placeholder="Gesamt"></b-input>
         </b-col>
       </b-row>
@@ -61,7 +64,7 @@
         <b-col cols="3">
           Gewünschte Ausschüttung:
         </b-col>
-        <b-col cols="3">
+        <b-col cols="1">
           <b-input v-model="wantedAmount"></b-input>
         </b-col>
       </b-row>
@@ -69,24 +72,33 @@
         <b-col cols="3">
           Tokens an Wallet:
         </b-col>
-        <b-col cols="3">
+        <b-col cols="1">
           {{ (wantedAmount * (1 - burnAmount)).toFixed(3) }}
+        </b-col>
+        <b-col cols="1">
+          ({{ ((activatedAmount * totalAmount) * (1 - burnAmount)).toFixed(3)}})
         </b-col>
       </b-row>
       <b-row>
         <b-col cols="3">
           Tokens Burned:
         </b-col>
-        <b-col cols="3">
+        <b-col cols="1">
           {{ (wantedAmount * burnAmount).toFixed(3) }}
+        </b-col>
+        <b-col cols="1">
+          ({{ ((activatedAmount * totalAmount) * burnAmount).toFixed(3)}})
         </b-col>
       </b-row>
       <b-row>
         <b-col cols="3">
           Tokens Übrig:
         </b-col>
-        <b-col cols="3">
+        <b-col cols="1">
           {{ ((activatedAmount * totalAmount) - wantedAmount).toFixed(3) }}
+        </b-col>
+        <b-col cols="1">
+          (0.000)
         </b-col>
       </b-row>
     </b-container>
@@ -106,6 +118,7 @@ export default {
       timeString: '00:00:00',
       startDate: new Date(2021, 3, 15),
       tempStartDate: new Date(2021, 3, 15).getTime() / 1000,
+      useStartDate: true,
       wantedAmount: 0,
       provider: null,
       options: [
@@ -113,7 +126,7 @@ export default {
         {text: 'Testnet', value: 'testnet'}
       ],
       selectedOption: 'javascript',
-      contractAddress: '0x41F5095C0c06784F620e82881a48942Cf1259FB6',
+      contractAddress: '0xb16c169fC9D35a011A59A87E61E7a03a563576c7',
       contract: null
     }
   },
@@ -134,8 +147,13 @@ export default {
         if(this.selectedOption === 'javascript'){
           return this.calcActivatedAmount(this.startDate, this.date);
         } else if (this.selectedOption === 'testnet'){
-          let activated = Number(await this.contract.calcActivatedPercent(this.convertDate(this.startDate), this.convertDate(this.date)));
-          toReturn = activated * (10 ** -18);
+          if(this.useStartDate) {
+            let activated = Number(await this.contract.calcActivatedPercent(this.convertDate(this.startDate), this.convertDate(this.date)));
+            toReturn = activated * (10 ** -18);
+          } else {
+            let activated = Number(await this.contract.getActivatedPercent(this.convertDate(this.date)));
+            toReturn = activated * (10 ** -18);
+          }
         }
         return Number(toReturn);
       },
@@ -148,8 +166,13 @@ export default {
         if(this.selectedOption === 'javascript'){
           return this.calcBurnAmount(this.startDate, this.date);
         } else if (this.selectedOption === 'testnet'){
-          let burn = Number(await this.contract.calcBurnPercent(this.convertDate(this.startDate), this.convertDate(this.date)));
-          toReturn = burn * (10 ** -18);
+          if(this.useStartDate) {
+            let burn = Number(await this.contract.calcBurnPercent(this.convertDate(this.startDate), this.convertDate(this.date)));
+            toReturn = burn * (10 ** -18);
+          } else {
+            let burn = Number(await this.contract.getBurnPercent(this.convertDate(this.date)));
+            toReturn = burn * (10 ** -18);
+          }
         }
         return Number(toReturn);
       },
@@ -176,7 +199,9 @@ export default {
       this.provider = new ethers.providers.EtherscanProvider('rinkeby', process.env.ETHERSCAN_API_KEY);
       let conAbi = [
           "function calcActivatedPercent(uint256 startDate, uint256 endDate) public pure returns (uint256)",
-          "function calcBurnPercent(uint256 startDate, uint256 endDate) public pure returns (uint256)"
+          "function calcBurnPercent(uint256 startDate, uint256 endDate) public pure returns (uint256)",
+          "function getActivatedPercent(uint256 endDate) public view returns (uint256)",
+          "function getBurnPercent(uint256 endDate) public view returns (uint256)"
       ]
       this.contract = new ethers.Contract(this.contractAddress, conAbi, this.provider);
     },
