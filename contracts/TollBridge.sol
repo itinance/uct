@@ -130,8 +130,7 @@ contract TollBridge is
         _released[beneficiary] += amount;
     }
 
-    function getAvailableTokens() public view returns (uint256 available, uint256 releasableAmount, uint256 burnableAmount) {
-        address beneficiary = msg.sender;
+    function getAvailableTokens(address beneficiary) public view returns (uint256 available, uint256 releasableAmount, uint256 burnableAmount) {
         uint256 amountTotal = _beneficiaries[beneficiary];
 
         //alreadyReleased needs to be the amount of tokens already released from vesting to the beneficiary
@@ -160,12 +159,12 @@ contract TollBridge is
 
     function calcBurnPercent (uint256 startDate, uint256 endDate) public pure returns (uint256) {
         require(endDate >= startDate, "Enddate must be greater than startdate");
-        
-        uint256 days_ = floor((endDate - startDate) / DAY);        
+
+        uint256 days_ = floor((endDate - startDate) / DAY);
         if(days_ >= 730) {
             return 0;
         }
-        
+
         uint256 burnAmount = 8*10**17-(days_ * HOLD);
 
         return max(burnAmount, 0);

@@ -120,6 +120,32 @@ describe("TollBridge", () => {
       expect(await tollBridge.getBeneficiaryAmount(axel.address)).to.eq(BigNumber.from('4000'));
     })
 
+    it("getAvailableTokens works correctly", async () => {
+      const tollBridgeWithAxelAsSender = await tollBridge.connect(axel);
+      await tollBridge.addBeneficiary(axel.address, BigNumber.from('10000000000000000000000'))
+
+      await increaseTime(86400 * 30.5 * 3 + 1);
+
+      const test1 = await tollBridge.getAvailableTokens(axel.address)
+      expect(test1.available).to.eq(BigNumber.from('500000000000000000000'))
+      expect(test1.burnableAmount).to.eq(BigNumber.from('350136986299500000000'))
+      expect(test1.releasableAmount).to.eq(BigNumber.from('149863013700500000000'))
+
+      await tollBridgeWithAxelAsSender.release(BigNumber.from('250000000000000000000'))
+
+      const test2 = await tollBridge.getAvailableTokens(axel.address)
+      expect(test2.available).to.eq(BigNumber.from('250000000000000000000'))
+      expect(test2.burnableAmount).to.eq(BigNumber.from('175068493149750000000'))
+      expect(test2.releasableAmount).to.eq(BigNumber.from('74931506850250000000'))
+
+      await increaseTime(86400 * 30.5 * 3);
+
+      const test3 = await tollBridge.getAvailableTokens(axel.address)
+      expect(test3.available).to.eq(BigNumber.from('750000000000000000000'))
+      expect(test3.burnableAmount).to.eq(BigNumber.from('449589041090250000000'))
+      expect(test3.releasableAmount).to.eq(BigNumber.from('300410958909750000000'))
+    })
+
     it("vesting was setup correctly", async () => {
       expect(await tollBridge.start()).to.eq(startVesting)
       expect(await token.balanceOf(tollBridge.address)).to.eq(BigNumber.from('10000000000000000000000'));
@@ -230,7 +256,7 @@ describe("TollBridge", () => {
 
       expect(await token.balanceOf(axel.address)).to.eq(0)
 
-      await increaseTime(86400 * 30.5 *3 + 1);
+      await increaseTime(86400 * 30.5 * 3 + 1);
 
       await tollBridgeWithAxelAsSender.release(100)
       expect(await token.balanceOf(axel.address)).to.eq(29)
