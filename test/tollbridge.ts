@@ -83,6 +83,43 @@ describe("TollBridge", () => {
       await token.mint(tollBridge.address, BigNumber.from('10000000000000000000000'));
     })
 
+    it("reverts on insufficient token balance", async () => {
+      await expect(tollBridge.addBeneficiary(axel.address, BigNumber.from('990000000000000000000000'))).to.be.revertedWith('Insufficient Token Balance')
+    })
+
+    it("reverts on invalid admin role on addBeneficiary", async () => {
+      const tollBridgeWithBenAsSender = await tollBridge.connect(ben);
+
+      await expect(tollBridgeWithBenAsSender.addBeneficiary(axel.address, BigNumber.from('10000000000000000000000'))).to.be.revertedWith('Restricted to admins')
+      await expect(tollBridgeWithBenAsSender.addBeneficiary(chantal.address, BigNumber.from('20000000000000000000000'))).to.be.revertedWith('Restricted to admins')
+    })
+
+    it("axel may get role for addBeneficiary", async () => {
+
+      const adminRole = await tollBridge.DEFAULT_ADMIN_ROLE();
+
+      await tollBridge.grantRole(adminRole, axel.address);
+
+      const tollBridgeWithAxelAsSender = await tollBridge.connect(axel);
+
+      await tollBridgeWithAxelAsSender.addBeneficiary(axel.address, BigNumber.from('10000000000000000'))
+      await tollBridgeWithAxelAsSender.addBeneficiary(chantal.address, BigNumber.from('200000000000000000'))
+
+      expect(await tollBridge.getBeneficiaryAmount(axel.address)).to.eq(BigNumber.from('10000000000000000'));
+      expect(await tollBridge.getBeneficiaryAmount(chantal.address)).to.eq(BigNumber.from('200000000000000000'));
+    })
+
+    it("reverts on invalid calls to reduceBeneficiary", async () => {
+      await expect(tollBridge.reduceBeneficiary(ben.address, BigNumber.from('10000000000000000000000'))).to.be.revertedWith('invalid amount')
+    })
+
+    it("reduceBeneficiary works correctly", async () => {
+      await tollBridge.addBeneficiary(axel.address, BigNumber.from('5000'))
+      await tollBridge.reduceBeneficiary(axel.address, BigNumber.from('1000'))
+
+      expect(await tollBridge.getBeneficiaryAmount(axel.address)).to.eq(BigNumber.from('4000'));
+    })
+
     it("vesting was setup correctly", async () => {
       expect(await tollBridge.start()).to.eq(startVesting)
       expect(await token.balanceOf(tollBridge.address)).to.eq(BigNumber.from('10000000000000000000000'));
@@ -111,7 +148,7 @@ describe("TollBridge", () => {
       //checking values on start date
       expect(await tollBridge.getBeneficiaryAmount(axel.address)).to.eq('10000000000000000000000');
       expect(await token.balanceOf(axel.address)).to.eq(0);
-      await expect(tollBridgeWithAxelAsSender.release(1)).to.be.revertedWith('There are not enough available tokens at this point')
+      await expect(tollBridgeWithAxelAsSender.release(1)).to.be.revertedWith('not enough available tokens')
 
       await increaseTime(86400 * 30.5 * 3 + 1);
 
@@ -135,7 +172,7 @@ describe("TollBridge", () => {
         }
 
         //making sure no further tokens have been released
-        await expect(tollBridgeWithAxelAsSender.release(1)).to.be.revertedWith('There are not enough available tokens at this point');
+        await expect(tollBridgeWithAxelAsSender.release(1)).to.be.revertedWith('not enough available tokens');
 
         //skipping to the next quarter
         await increaseTime(86400 * 30.5 * 3);
@@ -172,6 +209,7 @@ describe("TollBridge", () => {
 
     it("vesting initializing", async () => {
       await tollBridge.addBeneficiary(axel.address, 5000)
+
       expect(await tollBridge.getBeneficiaryAmount(axel.address)).to.eq(5000);
       expect(await tollBridge.getBeneficiaryAmount(ben.address)).to.eq(0);
       expect(await tollBridge.getBeneficiaryAmount(chantal.address)).to.eq(0);
@@ -184,9 +222,8 @@ describe("TollBridge", () => {
 
       const totalBefore = await token.balanceOf(tollBridge.address)
       console.log(1, totalBefore.toString())
-      console.log((await tollBridge.getTimeStamp()).toString())
 
-      await expect(tollBridgeWithAxelAsSender.release(100)).to.be.revertedWith('There are not enough available tokens at this point')
+      await expect(tollBridgeWithAxelAsSender.release(100)).to.be.revertedWith('not enough available tokens')
 
       const totalAfter = await token.balanceOf(tollBridge.address)
       console.log(2, totalAfter.toString())
@@ -198,7 +235,7 @@ describe("TollBridge", () => {
       await tollBridgeWithAxelAsSender.release(100)
       expect(await token.balanceOf(axel.address)).to.eq(29)
 
-      await expect(tollBridgeWithAxelAsSender.release(200)).to.be.revertedWith('There are not enough available tokens at this point')
+      await expect(tollBridgeWithAxelAsSender.release(200)).to.be.revertedWith('not enough available tokens')
 
       await tollBridgeWithAxelAsSender.release(100)
       expect(await token.balanceOf(axel.address)).to.eq(58)

@@ -8,13 +8,19 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
+import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
+import "@openzeppelin/contracts/utils/Context.sol";
+
 import "./UCToken.sol";
 
 /**
  * @title TollBridge
  *
  */
-contract TollBridge {
+contract TollBridge is
+    Context,
+    AccessControlEnumerable {
+
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -22,11 +28,13 @@ contract TollBridge {
     uint256 private constant DAY  = 86400;
     uint256 private constant HOLD = 1095890411000000;
 
-
     event TokensReleased(uint256 amount);
 
     // mapping for all beneficiaries holding their final amount of vested token
     mapping(address => uint256) private _beneficiaries;
+
+    // the total of all beneficiaries
+    uint256 private _total;
 
     mapping(address => uint256) private _released;
 
@@ -35,6 +43,11 @@ contract TollBridge {
 
     // the actual token
     UCToken private _token;
+
+    modifier onlyAdmin() {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Restricted to admins");
+        _;
+    }
 
     /**
      * @dev Creates a vesting contract that vests its balance of any ERC20 token to the
@@ -46,6 +59,8 @@ contract TollBridge {
     constructor (address token, uint256 start_) {
         require(token != address(0), "TollBridge: token is the zero address");
         require(start_ > 0, "TollBridge: start time is zero");
+
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
 
         _token = UCToken(token);
         _start = start_;
@@ -63,8 +78,25 @@ contract TollBridge {
         return address(_token);
     }
 
-    function addBeneficiary(address beneficiary, uint256 amount) public {
+    function getTotal() public view returns (uint256) {
+        return _total;
+    }
+
+    function addBeneficiary(address beneficiary, uint256 amount) public onlyAdmin {
+        require( beneficiary != address(0), "Invalid address" );
+        require( _total + amount <= getTotalBalance(), "Insufficient Token Balance" );
+
         _beneficiaries[beneficiary] += amount;
+
+        _total += amount;
+    }
+
+    function reduceBeneficiary(address beneficiary, uint256 amount) public onlyAdmin {
+        require( beneficiary != address(0), "Invalid address" );
+        require( _beneficiaries[beneficiary] >= amount, "invalid amount" );
+
+        _beneficiaries[beneficiary] -= amount;
+        _total -= amount;
     }
 
     function getBeneficiaryAmount(address beneficiary) public view returns (uint256) {
@@ -78,25 +110,21 @@ contract TollBridge {
         return _token.balanceOf(address(this));
     }
 
-    function getSender() public view returns (address) {
-        return msg.sender;
-    }
-
-    function getTimeStamp() public view returns (uint256) {
-        return block.timestamp;
-    }
-
     /**
      * @notice Transfers vested tokens to beneficiary.
      */
     function release(uint256 amount) public {
+        require(msg.sender != address(0), "TollBridge: sender is the zero address");
+
         address beneficiary = msg.sender;
         uint256 amountTotal = _beneficiaries[beneficiary];
+
+        require(amount <= amountTotal, "Insufficient balance");
 
         //alreadyReleased needs to be the amount of tokens already released from vesting to the beneficiary
         uint256 alreadyReleased = _released[beneficiary];
 
-        require(alreadyReleased + amount <= getActivatedAmount(block.timestamp, amountTotal), "There are not enough available tokens at this point");
+        require(alreadyReleased + amount <= getActivatedAmount(block.timestamp, amountTotal), "not enough available tokens");
 
         _token.transfer(beneficiary, getReleasableAmount(block.timestamp, amount));
         _token.burn(getBurnAmount(block.timestamp, amount));
