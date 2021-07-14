@@ -1,23 +1,25 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
+
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
-import "@openzeppelin/contracts/utils/Context.sol";
-
-import "./UCToken.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 
 /**
  * @title TollBridge
  *
  */
 contract TollBridge is
-    Context,
-    AccessControlEnumerable {
+    Initializable,
+    ContextUpgradeable,
+    AccessControlEnumerableUpgradeable {
 
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
@@ -40,7 +42,7 @@ contract TollBridge is
     uint256 private _start;
 
     // the actual token
-    UCToken private _token;
+    ERC20Burnable private _token;
 
     modifier onlyAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Restricted to admins");
@@ -54,13 +56,13 @@ contract TollBridge is
      * @param token address of the token which should be vested
      * @param start_ the time (as Unix time) at which point vesting starts
      */
-    constructor (address token, uint256 start_) {
+    function initialize(address token, uint256 start_) public initializer {
         require(token != address(0), "TollBridge: token is the zero address");
         require(start_ > 0, "TollBridge: start time is zero");
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
 
-        _token = UCToken(token);
+        _token = ERC20Burnable(token);
         _start = start_;
     }
 

@@ -9,6 +9,9 @@ import "@nomiclabs/hardhat-waffle";
 import "@typechain/hardhat";
 import "@nomiclabs/hardhat-etherscan";
 
+require("@nomiclabs/hardhat-ethers");
+require('@openzeppelin/hardhat-upgrades');
+
 //import ethers from 'hardhat';
 
 // TODO: reenable solidity-coverage when it works
@@ -82,7 +85,7 @@ task("mint", "Mint Tokens")
 const config: HardhatUserConfig = {
   defaultNetwork: "hardhat",
   solidity: {
-    compilers: [{ version: "0.8.3", settings: {} }],
+    compilers: [{ version: "0.8.2", settings: {} }],
     settings: {
       optimizer: {
         enabled: true

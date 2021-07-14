@@ -28,6 +28,7 @@
     "@nomiclabs/hardhat-etherscan": "^2.1.1",
     "@nomiclabs/hardhat-waffle": "^2.0.1",
     "@nomiclabs/hardhat-web3": "^2.0.0",
+    "@openzeppelin/hardhat-upgrades": "^1.9.0",
     "@typechain/ethers-v5": "^6.0.5",
     "@typechain/hardhat": "^1.0.1",
     "@types/chai": "^4.2.15",
@@ -38,7 +39,7 @@
     "chai-as-promised": "^7.1.1",
     "chai-datetime": "^1.8.0",
     "ethereum-waffle": "^3.3.0",
-    "ethers": "^5.0.31",
+    "ethers": "^5.4.1",
     "hardhat": "^2.1.1",
     "hardhat-typechain": "^0.3.5",
     "ts-generator": "^0.1.1",
@@ -49,8 +50,9 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.0.0",
+    "@openzeppelin/contracts-upgradeable": "^4.2.0",
     "dotenv": "^8.2.0"
   },
-  "postinstall":"typechain",
+  "postinstall": "typechain",
   "type": "module"
 }

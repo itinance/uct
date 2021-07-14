@@ -1,4 +1,6 @@
 import { ethers } from "hardhat";
+const { upgrades } = require('hardhat');
+
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { UCToken__factory, UCToken, TollBridge__factory, TollBridge } from "../typechain";
@@ -59,6 +61,7 @@ describe("TollBridge", () => {
 
     token = await tokenFactory.deploy();
     await token.deployed();
+
   });
 
 
@@ -74,10 +77,13 @@ describe("TollBridge", () => {
 
       console.log("Start Vesting: " + startVesting)
 
-      tollBridge = await tollBridgeFactory.deploy(token.address, startVesting);
+      tollBridge = (await upgrades.deployProxy(tollBridgeFactory, [token.address, startVesting], { initializer: 'initialize' })) as TollBridge;
       await tollBridge.deployed();
-
+      console.log('TollBridge deployed to:', tollBridge.address);
+  
       console.log('TB Start:  ' + await tollBridge.start())
+
+      await expect(token.address, await tollBridge.getToken())
 
       // put in total 10k tokens for vesting
       await token.mint(tollBridge.address, BigNumber.from('10000000000000000000000'));
